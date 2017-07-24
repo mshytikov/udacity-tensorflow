@@ -1,0 +1,27 @@
+version: '2'
+services:
+  app:
+    build:
+      context: ./docker-compose
+      args:
+        host_uid: $UID
+        host_gid: $GID
+    # your local image with correct permissions
+    image: $USER/tensorflow-notebook:$UID.$GID
+    environment:
+      JOBLIB_TEMP_FOLDER: /tmp
+    working_dir: /home/jovyan/work
+    volumes:
+      - .:/home/jovyan/work
+
+  jupyter:
+    extends: app
+    command: jupyter notebook
+    ports:
+      - 8888:8888
+
+  jupyterlab:
+    extends: app
+    command: jupyter lab --ip=0.0.0.0
+    ports:
+      - 8888:8888
