@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Download and extract data
+#
+# Structure of data dir (tree -L 3)
+# ├── data
+#   ├── compressed
+#   │   ├── notMNIST_large.tar.gz
+#   │   └── notMNIST_small.tar.gz
+#   └── raw
+#       ├── large
+#       └── small
+#
+#
+###############################################################################
+# Env setup
+###############################################################################
+
+# Set bash flags
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Make sure we run commands from project root
+ROOT="$(realpath $(dirname "${BASH_SOURCE[0]}")/../)"
+cd $ROOT
+
+###############################################################################
+# Functions
+###############################################################################
+
+# download from:url  to:dest_file
+download() {
+  local url=${1#from:}
+  local dest=${2#to:}
+
+  if [ -f "${dest}" ]; then
+    echo "File already exists: $dest"
+  else
+    wget --show-progress  --output-document="${dest}" "$url"
+  fi
+
+  echo "md5sum: $(md5sum ${dest})"
+
+}
+
+# extract from:src to:dest_dir
+extract() {
+  local src=${1#from:}
+  local dest_dir=${2#to:}
+
+  if [ -d "${dest_dir}" ]; then
+    echo "Extract already exists: $dest_dir"
+  else
+    echo "extracting: $src"
+    mkdir -p $dest_dir
+    tar --checkpoint=1000 -xzf $src --directory=$dest_dir --strip-components=1
+  fi
+}
+
+###############################################################################
+# Main execution
+###############################################################################
+
+mkdir -p data/compressed
+mkdir -p data/raw
+
+download \
+  from:"https://commondatastorage.googleapis.com/books1000/notMNIST_large.tar.gz" \
+  to:"data/compressed/notMNIST_large.tar.gz"
+
+download \
+  from:"https://commondatastorage.googleapis.com/books1000/notMNIST_small.tar.gz" \
+  to:"data/compressed/notMNIST_small.tar.gz"
+
+extract \
+  from:"compressed/notMNIST_large.tar.gz" \
+  to:"data/raw/small"
+
+extract \
+  from:"compressed/notMNIST_small.tar.gz" \
+  to:"data/raw/large"
+
+echo "Done."
