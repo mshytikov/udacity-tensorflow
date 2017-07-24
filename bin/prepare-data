@@ -41,7 +41,6 @@ download() {
   fi
 
   echo "md5sum: $(md5sum ${dest})"
-
 }
 
 # extract from:src to:dest_dir
