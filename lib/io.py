@@ -3,6 +3,12 @@ import numpy as np
 from scipy import ndimage
 import pickle
 import pathlib
+import collections
+
+from sklearn.model_selection import ShuffleSplit
+from sklearn.utils import shuffle
+
+Dataset = collections.namedtuple('Dataset', ['x', 'y'])
 
 
 def normalize(image_data, pixel_depth=255.0):
@@ -46,3 +52,67 @@ def pickle_letters(src_dir=None, dest_dir=None):
             print("File already exists: {}".format(letter_pickle_file))
         else:
             piclke_letter(letter_dir, letter_pickle_file)
+
+
+def unpickle_letters(src_dir):
+    for file_name in sorted(os.listdir(src_dir)):
+#        letter = os.path.splitext(file_name)[0]
+        with open(os.path.join(src_dir, file_name), 'rb') as f:
+            yield pickle.load(f)
+
+
+def pickle_datasets(train, valid, test, dest_file):
+    with open(dest_file, 'wb') as f:
+        datasets = {
+            'train_dataset': train.x,
+            'train_labels': train.y,
+            'valid_dataset': valid.x,
+            'valid_labels': valid.y,
+            'test_dataset': test.x,
+            'test_labels': test.y,
+            }
+        pickle.dump(datasets, f, pickle.HIGHEST_PROTOCOL)
+
+
+def split_dataset(X, train_size=None, test_size=None):
+    shuffle_split = ShuffleSplit(
+            n_splits=1,
+            random_state=0,
+            train_size=train_size,
+            test_size=test_size,
+            )
+    for train_index, test_index in shuffle_split.split(X):
+        return [X[train_index], X[test_index]]
+
+
+def build_datasets(src_dir, train_size, test_size):
+    letters = [l for l in unpickle_letters(src_dir)]
+    train_size_per_leter = train_size // len(letters) + 1
+    test_size_per_leter = test_size // len(letters) + 1
+
+    train_datasets = []
+    train_labels = []
+    test_datasets = []
+    test_labels = []
+
+    for index, letter in enumerate(letters):
+        train, test = split_dataset(
+                letter,
+                train_size=train_size_per_leter,
+                test_size=test_size_per_leter
+                )
+
+        train_datasets.append(train)
+        train_labels.append(np.full(train_size_per_leter, index))
+        test_datasets.append(test)
+        test_labels.append(np.full(test_size_per_leter, index))
+
+    train_x = np.concatenate(train_datasets)[:train_size]
+    train_y = np.concatenate(train_labels)[:train_size]
+    test_x = np.concatenate(test_datasets)[:test_size]
+    test_y = np.concatenate(test_labels)[:test_size]
+
+    train = Dataset(*shuffle(train_x, train_y))
+    test = Dataset(*shuffle(test_x, test_y))
+
+    return (train, test)
