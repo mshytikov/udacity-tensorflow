@@ -74,10 +74,10 @@ download \
 
 extract \
   from:"data/compressed/notMNIST_large.tar.gz" \
-  to:"data/raw/test"
+  to:"data/raw/train"
 
 extract \
   from:"data/compressed/notMNIST_small.tar.gz" \
-  to:"data/raw/train"
+  to:"data/raw/test"
 
 echo "Done."
