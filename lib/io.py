@@ -8,7 +8,10 @@ import collections
 from sklearn.model_selection import ShuffleSplit
 from sklearn.utils import shuffle
 
+RANDOM_STATE = np.random.RandomState(10)
+
 Dataset = collections.namedtuple('Dataset', ['x', 'y'])
+Workset = collections.namedtuple('Workset', ['train', 'valid', 'test'])
 
 
 def normalize(image_data, pixel_depth=255.0):
@@ -61,23 +64,10 @@ def unpickle_letters(src_dir):
             yield pickle.load(f)
 
 
-def pickle_datasets(train, valid, test, dest_file):
-    with open(dest_file, 'wb') as f:
-        datasets = {
-            'train_dataset': train.x,
-            'train_labels': train.y,
-            'valid_dataset': valid.x,
-            'valid_labels': valid.y,
-            'test_dataset': test.x,
-            'test_labels': test.y,
-            }
-        pickle.dump(datasets, f, pickle.HIGHEST_PROTOCOL)
-
-
 def split_dataset(X, train_size=None, test_size=None):
     shuffle_split = ShuffleSplit(
             n_splits=1,
-            random_state=0,
+            random_state=RANDOM_STATE,
             train_size=train_size,
             test_size=test_size,
             )
@@ -116,3 +106,13 @@ def build_datasets(src_dir, train_size, test_size):
     test = Dataset(*shuffle(test_x, test_y))
 
     return (train, test)
+
+
+def pickle_workset(dest_file, workset):
+    with open(dest_file, 'wb') as f:
+        pickle.dump(workset, f, pickle.HIGHEST_PROTOCOL)
+
+
+def unpickle_workset(src_file):
+    with open(src_file, 'rb') as f:
+        return pickle.load(f)
