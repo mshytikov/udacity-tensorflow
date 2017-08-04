@@ -91,11 +91,12 @@ def build_datasets(src_dir, train_size, test_size):
                 train_size=train_size_per_leter,
                 test_size=test_size_per_leter
                 )
-
         train_datasets.append(train)
         train_labels.append(np.full(train_size_per_leter, index))
         test_datasets.append(test)
         test_labels.append(np.full(test_size_per_leter, index))
+
+    del letters  # let's keep memory usage low
 
     train_x = np.concatenate(train_datasets)[:train_size]
     train_y = np.concatenate(train_labels)[:train_size]

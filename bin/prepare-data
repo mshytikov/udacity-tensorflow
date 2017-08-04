@@ -8,8 +8,8 @@
 #   │   ├── notMNIST_large.tar.gz
 #   │   └── notMNIST_small.tar.gz
 #   └── raw
-#       ├── large
-#       └── small
+#       ├── train
+#       └── test
 #
 #
 ###############################################################################
